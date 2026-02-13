@@ -56,7 +56,7 @@ export default function WalletSubmissionForm() {
       setMessage(data.message || "Submitted successfully!");
       setWalletInput("");
 
-      // Refresh remaining quota
+      // Refresh remaining
       if (code) {
         const refresh = await fetch(`/.netlify/functions/checkCode?code=${code}`);
         const refreshed = await refresh.json();

@@ -9,4 +9,3 @@ export const validateWallet = (wallet, chain) => {
 
   return regexes[chain]?.test(wallet);
 };
- 

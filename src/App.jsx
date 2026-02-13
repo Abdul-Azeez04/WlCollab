@@ -1,12 +1,19 @@
-import React from "react";
-import WalletSubmissionForm from "./components/WalletSubmissionForm";
+import { Routes, Route } from "react-router-dom";
+import Home from "./pages/Home";
+import ProjectPage from "./pages/ProjectPage";
+import AdminDashboard from "./pages/AdminDashboard";
+import CreateProject from "./pages/CreateProject";
+import ManageProject from "./pages/ManageProject";
 
-function App() {
+export default function App() {
   return (
-    <div style={{ minHeight: "100vh", background: "#f0f0f0", padding: "20px" }}>
-      <WalletSubmissionForm />
-    </div>
+    <Routes>
+      <Route path="/" element={<Home />} />
+      <Route path="/project/:slug" element={<ProjectPage />} />
+
+      <Route path="/admin" element={<AdminDashboard />} />
+      <Route path="/admin/create" element={<CreateProject />} />
+      <Route path="/admin/manage/:slug" element={<ManageProject />} />
+    </Routes>
   );
 }
-
-export default App;

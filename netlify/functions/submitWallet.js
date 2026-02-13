@@ -1,16 +1,16 @@
 const { createClient } = require("@supabase/supabase-js");
 
-// Supabase client (service role for writes)
+// Use service role key for insert permissions
 const supabase = createClient(
   process.env.VITE_SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
-// Parse pasted wallets (newlines or commas)
+// Convert pasted wallets to array
 function normalizeWallets(input) {
   if (!input) return [];
   return input
-    .split(/[\n,]+/)
+    .split(/[\n,]+/) // split by new line or comma
     .map((w) => w.trim())
     .filter((w) => w.length > 0);
 }
@@ -23,21 +23,17 @@ exports.handler = async (event) => {
     if (!code) return { statusCode: 400, body: JSON.stringify({ error: "Code required" }) };
     if (!chain) return { statusCode: 400, body: JSON.stringify({ error: "Chain required" }) };
 
-    const wallets = Array.isArray(rawWallets)
-      ? rawWallets.map(w => w.trim()).filter(Boolean)
-      : normalizeWallets(rawWallets);
-
-    if (wallets.length === 0)
-      return { statusCode: 400, body: JSON.stringify({ error: "No wallets submitted" }) };
+    const wallets = Array.isArray(rawWallets) ? rawWallets.map(w => w.trim()).filter(Boolean) : normalizeWallets(rawWallets);
+    if (wallets.length === 0) return { statusCode: 400, body: JSON.stringify({ error: "No wallets submitted" }) };
 
     // 1️⃣ Fetch code
-    const { data: codeData } = await supabase
+    const { data: codeData, error: codeErr } = await supabase
       .from("codes")
       .select("*")
       .eq("code", code)
       .single();
 
-    if (!codeData || !codeData.is_active)
+    if (codeErr || !codeData || !codeData.is_active)
       return { statusCode: 400, body: JSON.stringify({ error: "Invalid or inactive code" }) };
 
     // 2️⃣ Fetch project
@@ -47,8 +43,7 @@ exports.handler = async (event) => {
       .eq("id", codeData.project_id)
       .single();
 
-    if (!project)
-      return { statusCode: 400, body: JSON.stringify({ error: "Project not found" }) };
+    if (!project) return { statusCode: 400, body: JSON.stringify({ error: "Project not found" }) };
 
     // 3️⃣ Check quota
     const { data: existingSubs } = await supabase
@@ -58,10 +53,9 @@ exports.handler = async (event) => {
 
     const currentCount = existingSubs?.length || 0;
     const remaining = codeData.max_submissions - currentCount;
-    if (remaining <= 0)
-      return { statusCode: 400, body: JSON.stringify({ error: "Quota full" }) };
+    if (remaining <= 0) return { statusCode: 400, body: JSON.stringify({ error: "Quota full" }) };
 
-    // 4️⃣ Duplicate check
+    // 4️⃣ Check duplicates if project blocks them
     let existingProjectWallets = [];
     if (project.allow_duplicate_block) {
       const { data: projectSubs } = await supabase
@@ -80,15 +74,16 @@ exports.handler = async (event) => {
         rejected.push({ wallet: w, reason: "Quota exceeded" });
         continue;
       }
+
       if (project.allow_duplicate_block && existingProjectWallets.includes(w.toLowerCase())) {
         rejected.push({ wallet: w, reason: "Duplicate blocked" });
         continue;
       }
+
       accepted.push(w);
     }
 
-    if (accepted.length === 0)
-      return { statusCode: 400, body: JSON.stringify({ error: "No wallets accepted", rejected }) };
+    if (accepted.length === 0) return { statusCode: 400, body: JSON.stringify({ error: "No wallets accepted", rejected }) };
 
     // 6️⃣ Insert accepted wallets
     const insertPayload = accepted.map((wallet) => ({
@@ -100,8 +95,7 @@ exports.handler = async (event) => {
     }));
 
     const { error: insertError } = await supabase.from("submissions").insert(insertPayload);
-    if (insertError)
-      return { statusCode: 500, body: JSON.stringify({ error: "Failed to save wallets" }) };
+    if (insertError) return { statusCode: 500, body: JSON.stringify({ error: "Failed to save wallets" }) };
 
     return {
       statusCode: 200,
@@ -110,8 +104,6 @@ exports.handler = async (event) => {
         message: `${accepted.length} wallet(s) submitted successfully`,
         accepted,
         rejected,
-        remaining: remaining - accepted.length,
-        tier_name: project.tier_name || "N/A",
       }),
     };
   } catch (err) {
