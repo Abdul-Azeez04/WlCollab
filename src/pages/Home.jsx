@@ -1,44 +1,62 @@
-import { useEffect, useState } from "react";
-import { supabase } from "../utils/supabase";
 import { Link } from "react-router-dom";
 
 export default function Home() {
-  const [projects, setProjects] = useState([]);
-
-  useEffect(() => {
-    const loadProjects = async () => {
-      const { data } = await supabase.from("projects").select("*").order("created_at", { ascending: false });
-      setProjects(data || []);
-    };
-    loadProjects();
-  }, []);
-
   return (
-    <div className="p-6 max-w-5xl mx-auto">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">WlCollab</h1>
-        <Link to="/admin" className="bg-black text-white px-4 py-2 rounded">
-          Admin
-        </Link>
+    <div className="max-w-6xl mx-auto px-4 py-16">
+      <div className="text-center">
+        <h1 className="text-5xl font-bold tracking-tight leading-tight">
+          Wallet Collection <span className="text-white/50">for Collab Managers</span>
+        </h1>
+
+        <p className="text-white/70 mt-5 max-w-2xl mx-auto text-lg">
+          WlCollab helps creators collect wallets securely using unique community codes,
+          GTD allocations, FCFS limits, and tiered allowlists — all in one clean page.
+        </p>
+
+        <div className="flex justify-center gap-3 mt-8">
+          <Link
+            to="/admin"
+            className="bg-white text-black px-6 py-3 rounded-2xl font-semibold hover:bg-white/90 transition"
+          >
+            Create Project
+          </Link>
+
+          <a
+            href="https://x.com/WlCollab"
+            target="_blank"
+            className="border border-white/20 px-6 py-3 rounded-2xl font-semibold text-white hover:bg-white/10 transition"
+          >
+            Follow on X
+          </a>
+        </div>
       </div>
 
-      <p className="text-gray-600 mb-6">
-        Wallet collector for collab managers. X: @WlCollab
-      </p>
+      <div className="grid md:grid-cols-3 gap-4 mt-16">
+        <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+          <h3 className="text-lg font-bold">Unique Codes</h3>
+          <p className="text-white/70 mt-2 text-sm">
+            Generate a different code for each community and control their allocation.
+          </p>
+        </div>
 
-      <div className="grid md:grid-cols-2 gap-4">
-        {projects.map((p) => (
-          <Link
-            key={p.id}
-            to={`/project/${p.slug}`}
-            className="bg-white shadow rounded p-4 hover:scale-[1.01] transition"
-          >
-            <h2 className="text-xl font-semibold">{p.name}</h2>
-            <p className="text-gray-600 text-sm mt-2">{p.description}</p>
-          </Link>
-        ))}
+        <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+          <h3 className="text-lg font-bold">GTD + FCFS Tiers</h3>
+          <p className="text-white/70 mt-2 text-sm">
+            Set multiple allowlist tiers (Allowlist 1, Allowlist 2, GTD, FCFS etc.)
+          </p>
+        </div>
+
+        <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+          <h3 className="text-lg font-bold">Quota Protection</h3>
+          <p className="text-white/70 mt-2 text-sm">
+            Wallet submissions automatically stop when the allocated quota is reached.
+          </p>
+        </div>
+      </div>
+
+      <div className="mt-20 text-center text-white/40 text-sm">
+        Built for creators & collab managers • WlCollab © {new Date().getFullYear()}
       </div>
     </div>
   );
 }
- 

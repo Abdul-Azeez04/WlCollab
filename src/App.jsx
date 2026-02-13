@@ -1,19 +1,20 @@
-import { Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Home from "./pages/Home";
-import ProjectPage from "./pages/ProjectPage";
-import AdminDashboard from "./pages/AdminDashboard";
-import CreateProject from "./pages/CreateProject";
+import Admin from "./pages/Admin";
 import ManageProject from "./pages/ManageProject";
+import ProjectPage from "./pages/ProjectPage";
+import Navbar from "./components/Navbar";
 
 export default function App() {
   return (
-    <Routes>
-      <Route path="/" element={<Home />} />
-      <Route path="/project/:slug" element={<ProjectPage />} />
-
-      <Route path="/admin" element={<AdminDashboard />} />
-      <Route path="/admin/create" element={<CreateProject />} />
-      <Route path="/admin/manage/:slug" element={<ManageProject />} />
-    </Routes>
+    <BrowserRouter>
+      <Navbar />
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/admin" element={<Admin />} />
+        <Route path="/manage/:slug" element={<ManageProject />} />
+        <Route path="/project/:slug" element={<ProjectPage />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
